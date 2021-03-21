@@ -2,6 +2,8 @@ const Discord = require('discord.js');
 const fs = require('fs');
 const config = require("./config.json");
 const http = require('http');
+const url = require('url');
+const fetch = require('node-fetch');
 
 const prefix = "!";
 
@@ -14,7 +16,85 @@ http.createServer((req, res) => {
 	let responseCode = 404;
 	let content = '404 Error';
 
-	if (req.url === '/') {
+	const urlObj = url.parse(req.url, true);
+
+	if (urlObj.query.code) {
+		const accessCode = urlObj.query.code;
+		const data = {
+			client_id: '822534331079327803',
+			client_secret: config.CLIENT_SECRET,
+			grant_type: 'authorization_code',
+			redirect_uri: 'http://localhost:53134',
+			code: accessCode,
+			scope: 'connections identify',
+		};
+
+		// for connected accounts
+		fetch('https://discord.com/api/oauth2/token', {
+			method: 'POST',
+			body: new URLSearchParams(data),
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		})
+			.then(discordRes => discordRes.json())
+			.then(info => {
+				console.log(info);
+				return info;
+			})
+			.then(info => fetch('https://discord.com/api/users/@me/connections', {
+				headers: {
+					authorization: `${info.token_type} ${info.access_token}`,
+				},
+			}))
+			.then(userRes => userRes.json())
+			.then(response => {
+				//console.log(response);
+				var i;
+				for (i = 0; i < response.length; i++) {
+  				if (response[i]["type"] == ["twitch"]) {
+						console.log(response[i]["name"]);
+					}
+					else {
+						console.log(false);
+					}
+				}
+			}).catch(function () {
+				console.log('error')
+			})
+
+
+		// for username#discriminator
+		fetch('https://discord.com/api/oauth2/token', {
+			method: 'POST',
+			body: new URLSearchParams(data),
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		})
+			.then(discordRes => discordRes.json())
+			.then(info => {
+				console.log(info);
+				return info;
+			})
+			.then(info => fetch('https://discord.com/api/users/@me', {
+				headers: {
+					authorization: `${info.token_type} ${info.access_token}`,
+				},
+			}))
+			.then(userRes => userRes.json())
+			.then(response => {
+				const { username, discriminator } = response;
+				console.log(`${username}#${discriminator}`);
+			}).catch(function () {
+				console.log('error')
+			})
+
+
+
+	}
+
+	if (urlObj.pathname === '/') {
 		responseCode = 200;
 		content = fs.readFileSync('./index.html');
 	}

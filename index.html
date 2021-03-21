@@ -1,64 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>OAuth2 for MingyJongo</title>
+	<link rel="icon" type="image/png" href="/assets/images/mingy-icon.png" />
+	<title>MingyJongo OAuth2</title>
 </head>
 <body>
 	<div id="info">
-		hello
+		<h1>MingyJongo OAuth2</h1>
 	</div>
-  <a id="login" style="display: none;" href="https://discord.com/api/oauth2/authorize?client_id=822534331079327803&redirect_uri=http%3A%2F%2Flocalhost%3A53134&response_type=token&scope=connections">Identify Yourself</a>
+  <p style="display: inline;">Link your Twitch account for croissant access:</p> <a id="login" style="display: none;" href="https://discord.com/api/oauth2/authorize?client_id=822534331079327803&redirect_uri=http%3A%2F%2Flocalhost%3A53134&response_type=code&scope=connections%20identify">Authorize</a>
 	<script>
+	function generateRandomString() {
+			const rand = Math.floor(Math.random() * 10);
+			let randStr = '';
+
+			for (let i = 0; i < 20 + rand; i++) {
+				randStr += String.fromCharCode(33 + Math.floor(Math.random() * 94));
+			}
+
+			return randStr;
+		}
+
 		window.onload = () => {
-      function generateRandomString() {
-      	const rand = Math.floor(Math.random() * 10);
-      	let randStr = '';
 
-      	for (let i = 0; i < 20 + rand; i++) {
-      		randStr += String.fromCharCode(33 + Math.floor(Math.random() * 94));
-      	}
+				const randStr = generateRandomString();
+				localStorage.setItem('stateParameter', randStr);
 
-      	return randStr;
-      }
+				document.getElementById('login').href += `&state=${encodeURIComponent(btoa(randStr))}`;
+				document.getElementById('login').style.display = 'inline-block';
 
-      // ...
-
-
-
-			const fragment = new URLSearchParams(window.location.hash.slice(1));
-
-			if (fragment.has("access_token")) {
-        const urlState = fragment.get('state');
-      	const stateParameter = localStorage.getItem('stateParameter');
-      	if (stateParameter !== atob(decodeURIComponent(urlState))) {
-      		return console.log('You may have been clickjacked!');
-      	}
-
-				const accessToken = fragment.get("access_token");
-				const tokenType = fragment.get("token_type");
-
-				fetch('https://discord.com/api/users/@me/connections', {
-					headers: {
-						authorization: `${tokenType} ${accessToken}`
-					}
-				})
-					.then(res => res.json())
-					.then(response => {
-						const { type, name } = response[1];
-						document.getElementById('info').innerText += ` ${type}: ${name}`;
-					})
-					.catch(console.error);
-
-			}
-			else {
-				document.getElementById('login').style.display = 'block';
-			}
-
-      // generate and store the string
-      const randStr = generateRandomString();
-      localStorage.setItem('stateParameter', randStr);
-
-      document.getElementById('login').href += `&state=${btoa(randStr)}`;
 		}
 	</script>
 </body>
