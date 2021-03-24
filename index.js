@@ -37,7 +37,7 @@ client.on("message", function(message) {
   	client.commands.get(command).execute(message, args);
   } catch (error) {
   	console.error(error);
-  	message.reply('there was an error trying to execute that command!');
+  	message.reply('Error trying to execute that command.');
   }
 });
 
@@ -130,9 +130,9 @@ async function getAccounts (info) {
 async function authRequest(body) {
 	try {
 			let info = await getToken(body);
-			await new Promise(r => setTimeout(r, 3000));
+			//await new Promise(r => setTimeout(r, 3000));
 			await getUsername(info);
-			await new Promise(r => setTimeout(r, 3000));
+			//await new Promise(r => setTimeout(r, 3000));
 			await getAccounts(info);
 	}
 	catch {
