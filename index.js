@@ -9,7 +9,7 @@ const prefix = "!";
 const port = 53134;
 
 
-// discord bot
+// Discord bot client
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 
@@ -39,18 +39,16 @@ client.on("message", function(message) {
   	console.error(error);
   	message.reply('there was an error trying to execute that command!');
   }
-
 });
 
 client.login(config.BOT_TOKEN);
 
 
 
-// webserver
+// Webserver for OAuth2
 http.createServer((req, res) => {
 	let responseCode = 404;
 	let content = '404 Error';
-
 	const urlObj = url.parse(req.url, true);
 
 	if (urlObj.query.code) {
@@ -84,7 +82,7 @@ http.createServer((req, res) => {
 	.listen(port);
 
 
-
+// Gets the access token by exchanging auth code with Discord
 async function getToken (body) {
 	let discordRes = await fetch('https://discord.com/api/oauth2/token', {
 		method: 'POST',
@@ -100,9 +98,8 @@ async function getToken (body) {
 	return info;
 }
 
-
+// Gets a user's Discord username#discriminator
 async function getUsername (info) {
-
 	let userRes = await fetch('https://discord.com/api/users/@me', {
 		headers: {
 			authorization: `${info.token_type} ${info.access_token}`,
@@ -113,8 +110,8 @@ async function getUsername (info) {
 	console.log(`Username: ${username}#${discriminator}`);
 }
 
+// Gets a user's connected Twitch account
 async function getAccounts (info) {
-
 	let userRes = await fetch('https://discord.com/api/users/@me/connections', {
 		headers: {
 			authorization: `${info.token_type} ${info.access_token}`,
@@ -129,18 +126,16 @@ async function getAccounts (info) {
 	}
 }
 
-async function authRequest(body)
-{
-	try
-	{
+// Main function that handles getting token, Discord username, Twitch account
+async function authRequest(body) {
+	try {
 			let info = await getToken(body);
 			await new Promise(r => setTimeout(r, 3000));
 			await getUsername(info);
 			await new Promise(r => setTimeout(r, 3000));
 			await getAccounts(info);
 	}
-	catch
-	{
+	catch {
 			console.error(e);
 	}
 }
