@@ -63,61 +63,10 @@ http.createServer((req, res) => {
 			code: accessCode,
 			scope: 'identify connections',
 		};
+		const body = new URLSearchParams(data);
 
+		authRequest(body);
 
-			async function getUsername () {
-				let discordRes = await fetch('https://discord.com/api/oauth2/token', {
-					method: 'POST',
-					body: new URLSearchParams(data),
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-				});
-				if (!discordRes.ok) {
-					console.log('username not ok')
-					return;
-				}
-				let info = await discordRes.json();
-				let userRes = await fetch('https://discord.com/api/users/@me', {
-					headers: {
-						authorization: `${info.token_type} ${info.access_token}`,
-					},
-				});
-				let userJson = await userRes.json();
-				const { username, discriminator } = userJson;
-				console.log(`Username: ${username}#${discriminator}`);
-			}
-
-			async function getAccounts () {
-
-				let discordRes = await fetch('https://discord.com/api/oauth2/token', {
-					method: 'POST',
-					body: new URLSearchParams(data),
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-				});
-				if (!discordRes.ok) {
-					console.log('accounts not ok')
-					return;
-				}
-				let info = await discordRes.json();
-				let userRes = await fetch('https://discord.com/api/users/@me/connections', {
-					headers: {
-						authorization: `${info.token_type} ${info.access_token}`,
-					},
-				});
-				let userJson = await userRes.json();
-				var i;
-				for (i = 0; i < userJson.length; i++) {
-	  			if (userJson[i]["type"] == ["twitch"]) {
-						console.log("Twitch: " + userJson[i]["name"]);
-					}
-				}
-			}
-
-			getUsername().catch(e => { console.error(e) })
-			getAccounts().catch(e => { console.error(e) })
 	}
 
 	if (urlObj.pathname === '/') {
@@ -133,3 +82,65 @@ http.createServer((req, res) => {
 	res.end();
 })
 	.listen(port);
+
+
+
+async function getToken (body) {
+	let discordRes = await fetch('https://discord.com/api/oauth2/token', {
+		method: 'POST',
+		body: body,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+		},
+	});
+	if (!discordRes.ok) {
+		console.log('getToken response not ok')
+	}
+	let info = await discordRes.json();
+	return info;
+}
+
+
+async function getUsername (info) {
+
+	let userRes = await fetch('https://discord.com/api/users/@me', {
+		headers: {
+			authorization: `${info.token_type} ${info.access_token}`,
+		},
+	});
+	let userJson = await userRes.json();
+	const { username, discriminator } = userJson;
+	console.log(`Username: ${username}#${discriminator}`);
+}
+
+async function getAccounts (info) {
+
+	let userRes = await fetch('https://discord.com/api/users/@me/connections', {
+		headers: {
+			authorization: `${info.token_type} ${info.access_token}`,
+		},
+	});
+	let userJson = await userRes.json();
+	var i;
+	for (i = 0; i < userJson.length; i++) {
+		if (userJson[i]["type"] == ["twitch"]) {
+			console.log("Twitch: " + userJson[i]["name"]);
+		}
+	}
+}
+
+async function authRequest(body)
+{
+	try
+	{
+			let info = await getToken(body);
+			await new Promise(r => setTimeout(r, 3000));
+			await getUsername(info);
+			await new Promise(r => setTimeout(r, 3000));
+			await getAccounts(info);
+	}
+	catch
+	{
+			console.error(e);
+	}
+}

@@ -23,9 +23,9 @@
 
 		window.onload = () => {
 
-		//const randStr = generateRandomString();
-		//localStorage.setItem('stateParameter', randStr);
-		//document.getElementById('login').href += `&state=${encodeURIComponent(btoa(randStr))}`;
+		const randStr = generateRandomString();
+		localStorage.setItem('stateParameter', randStr);
+		document.getElementById('login').href += `&state=${encodeURIComponent(btoa(randStr))}`;
 		document.getElementById('login').style.display = 'inline-block';
 
 		}
