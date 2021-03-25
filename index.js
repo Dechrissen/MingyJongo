@@ -9,6 +9,18 @@ const basicCommands = require('./commands/basic_commands.json');
 
 const prefix = "!";
 const port = 53134;
+// for storing a list of command names
+var commandList = [];
+
+
+var MongoClient = require('mongodb').MongoClient;
+var db_url = "mongodb://localhost:27017/";
+
+MongoClient.connect(db_url, { useUnifiedTopology: true }, function(err, db) {
+	if (err) throw err;
+	var dbo = db.db("derkscord");
+})
+
 
 
 // Discord bot client
@@ -20,8 +32,12 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
 	client.commands.set(command.name, command);
+	commandList.push(command.name);
 }
 
+for (const name in basicCommands) {
+	commandList.push(name);
+}
 
 client.once('ready', () => {
   console.log(`Ready! Logged in as ${client.user.tag}.`);
@@ -34,6 +50,23 @@ client.on("message", message => {
   const args = message.content.slice(prefix.length).trim().split(/ +/);
 	const command = args.shift().toLowerCase();
 
+	// !commands
+	if (command == "commands") {
+		var listOfCommands = [];
+		for (const c in commandList) {
+			listOfCommands.push(prefix + commandList[c]);
+		}
+		const search = ',';
+		const replacer = new RegExp(search, 'g');
+		var stringOfCommands = listOfCommands.toString();
+		const new_stringOfCommands = stringOfCommands.replace("\\[|\\]", "").replace(replacer, " | ");
+		message.channel.send("**Available commands**: " + new_stringOfCommands);
+		// log user's command use in console
+		console.log(`${message.author.tag} in #${message.channel.name}: !commands`);
+		return;
+	}
+
+	// basic text command
   if (!client.commands.has(command)) {
 		if (basicCommands[command]) {
 			message.channel.send(basicCommands[command]);
@@ -43,6 +76,7 @@ client.on("message", message => {
 			return;
 		}
 	}
+	// other commands
 	else {
 		try {
 	  	client.commands.get(command).execute(message, args);
@@ -95,6 +129,10 @@ http.createServer((req, res) => {
 	res.end();
 })
 	.listen(port);
+
+
+
+
 
 
 // Gets the access token by exchanging auth code with Discord
