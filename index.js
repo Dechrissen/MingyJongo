@@ -1,9 +1,11 @@
 const Discord = require('discord.js');
 const fs = require('fs');
-const config = require("./config.json");
 const http = require('http');
 const url = require('url');
 const fetch = require('node-fetch');
+
+const config = require("./config.json");
+const basicCommands = require('./commands/basic_commands.json');
 
 const prefix = "!";
 const port = 53134;
@@ -20,25 +22,38 @@ for (const file of commandFiles) {
 	client.commands.set(command.name, command);
 }
 
-client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
+
+client.once('ready', () => {
+  console.log(`Ready! Logged in as ${client.user.tag}.`);
 });
 
-client.on("message", function(message) {
+client.on("message", message => {
   // checks to see if message author is a bot, or if it doesn't start with "!"
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
 	const command = args.shift().toLowerCase();
 
-  if (!client.commands.has(command)) return;
+  if (!client.commands.has(command)) {
+		if (basicCommands[command]) {
+			message.channel.send(basicCommands[command]);
+		}
+		else {
+			message.reply("No such command.");
+			return;
+		}
+	}
+	else {
+		try {
+	  	client.commands.get(command).execute(message, args);
+	  } catch (error) {
+	  	console.error(error);
+	  	message.reply('Error trying to execute that command.');
+	  }
+	}
+	// log user's command use in console
+	console.log(`${message.author.tag} from #${message.channel.name}: ${message.content}`);
 
-  try {
-  	client.commands.get(command).execute(message, args);
-  } catch (error) {
-  	console.error(error);
-  	message.reply('Error trying to execute that command.');
-  }
 });
 
 client.login(config.BOT_TOKEN);
