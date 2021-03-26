@@ -3,7 +3,6 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url');
 const fetch = require('node-fetch');
-
 const config = require("./config.json");
 const basicCommands = require('./commands/basic_commands.json');
 
@@ -12,33 +11,37 @@ const port = 53134;
 // for storing a list of command names
 var commandList = [];
 
+const client = new Discord.Client();
 
 var MongoClient = require('mongodb').MongoClient;
 var db_url = "mongodb://localhost:27017/";
-
 MongoClient.connect(db_url, { useUnifiedTopology: true }, function(err, db) {
 	if (err) throw err;
 	var dbo = db.db("derkscord");
+	setBotCommands(client, dbo);
+	// Shutdown handler to close db connection
+	require('shutdown-handler').on('exit', function() {
+		db.close();
+		console.log("Shutting down...");
+	});
 })
 
-
-
-// Discord bot client
-const client = new Discord.Client();
-client.commands = new Discord.Collection();
-
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	client.commands.set(command.name, command);
-	commandList.push(command.name);
+// sets a Discord.Collection of bot commands
+function setBotCommands (client, dbo) {
+	client.commands = new Discord.Collection();
+	const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+	for (const file of commandFiles) {
+		const CommandClass = require(`./commands/${file}`);
+		const command = new CommandClass(dbo);
+		client.commands.set(command.name, command);
+		commandList.push(command.name);
+	}
+	for (const name in basicCommands) {
+		commandList.push(name);
+	}
 }
 
-for (const name in basicCommands) {
-	commandList.push(name);
-}
-
+// Event listeners
 client.once('ready', () => {
   console.log(`Ready! Logged in as ${client.user.tag}.`);
 });
@@ -131,10 +134,6 @@ http.createServer((req, res) => {
 	.listen(port);
 
 
-
-
-
-
 // Gets the access token by exchanging auth code with Discord
 async function getToken (body) {
 	let discordRes = await fetch('https://discord.com/api/oauth2/token', {
@@ -179,7 +178,7 @@ async function getAccounts (info) {
 	}
 }
 
-// Main function that handles getting token, Discord username, Twitch account
+// Main async function that handles getting token, Discord username, Twitch account
 async function authRequest(body) {
 	try {
 			let info = await getToken(body);

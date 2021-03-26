@@ -1,6 +1,11 @@
-module.exports = {
-	name: 'ping',
-	description: 'Random Mingy Jongo quote.',
+const BaseCommand = require('../BaseCommand.js');
+
+class PingCommand extends BaseCommand {
+	constructor (dbo) {
+		super(dbo);
+		this.name = 'ping';
+		this.description = 'Random Mingy Jongo quote.';
+	}
 	execute(message, args) {
 		const mingyQuotes = [
             "Hello, {user}. Mumbo has big surprise for you.",
@@ -11,5 +16,7 @@ module.exports = {
             ]
 		const x = Math.floor(mingyQuotes.length * Math.random());
 		message.channel.send(mingyQuotes[x].replace("{user}", message.member));
-	},
-};
+	}
+}
+
+module.exports = PingCommand
