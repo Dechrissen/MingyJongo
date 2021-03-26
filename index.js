@@ -6,15 +6,13 @@ const fetch = require('node-fetch');
 const config = require("./config.json");
 const basicCommands = require('./commands/basic_commands.json');
 
+var commandList = []; // for storing a list of command names
 const prefix = "!";
-const port = 53134;
-// for storing a list of command names
-var commandList = [];
 
 const client = new Discord.Client();
 
 var MongoClient = require('mongodb').MongoClient;
-var db_url = "mongodb://localhost:27017/";
+var db_url = config.DB_URL;
 MongoClient.connect(db_url, { useUnifiedTopology: true }, function(err, db) {
 	if (err) throw err;
 	var dbo = db.db("derkscord");
@@ -109,14 +107,13 @@ http.createServer((req, res) => {
 			client_id: '822534331079327803',
 			client_secret: config.CLIENT_SECRET,
 			grant_type: 'authorization_code',
-			redirect_uri: 'http://localhost:53134',
+			redirect_uri: config.OAUTH_REDIRECT,
 			code: accessCode,
 			scope: 'identify connections',
 		};
 		const body = new URLSearchParams(data);
 
 		authRequest(body);
-
 	}
 
 	if (urlObj.pathname === '/') {
@@ -131,7 +128,7 @@ http.createServer((req, res) => {
 	res.write(content);
 	res.end();
 })
-	.listen(port);
+	.listen(config.OAUTH_PORT);
 
 
 // Gets the access token by exchanging auth code with Discord
@@ -187,7 +184,7 @@ async function authRequest(body) {
 			//await new Promise(r => setTimeout(r, 3000));
 			await getAccounts(info);
 	}
-	catch {
+	catch (e) {
 			console.error(e);
 	}
 }

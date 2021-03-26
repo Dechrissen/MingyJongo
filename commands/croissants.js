@@ -11,10 +11,10 @@ class CroissantsCommand extends BaseCommand {
 		this.dbo.collection("users").findOne(query, function(err, result) {
 			if (err) throw err;
 			try {
-				message.reply("You have " + result.croissants + " croissants.");
+				message.channel.send(message.author.username + " has " + result.croissants + " Croissants.");
 			}
 			catch (err) {
-				message.channel.send("User " + message.author.tag + " not found!");
+				message.channel.send("User " + message.author.tag + " not in database!");
 			}
 		})
 	}
