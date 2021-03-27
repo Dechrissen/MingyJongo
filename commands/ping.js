@@ -15,7 +15,7 @@ class PingCommand extends BaseCommand {
             "As you see, {user}, there's no escape and resistance is futile!"
             ]
 		const x = Math.floor(mingyQuotes.length * Math.random());
-		message.channel.send(mingyQuotes[x].replace("{user}", message.member));
+		message.channel.send(mingyQuotes[x].replace("{user}", message.author.username));
 	}
 }
 

@@ -14,7 +14,7 @@ MongoClient.connect(db_url, { useUnifiedTopology: true }, function(err, db) {
       if (line) {
         const twitch = line.split(" ")[0];
         const score = parseInt(line.split(" ")[1]);
-        user_objects.push( {twitch:twitch, discord:null, croissants:score, last_daily:null, last_slots:null} );
+        user_objects.push( {twitch:twitch, discord:null, croissants:score, last_daily:null, last_slots:null, last_gamble:null} );
       }
 
     });
