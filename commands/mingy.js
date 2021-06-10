@@ -1,9 +1,9 @@
 const BaseCommand = require('../BaseCommand.js');
 
-class PingCommand extends BaseCommand {
+class MingyCommand extends BaseCommand {
 	constructor (dbo) {
 		super(dbo);
-		this.name = 'ping';
+		this.name = 'mingy';
 		this.description = 'Random Mingy Jongo quote.';
 	}
 	execute(message, args) {
@@ -19,4 +19,4 @@ class PingCommand extends BaseCommand {
 	}
 }
 
-module.exports = PingCommand
+module.exports = MingyCommand
