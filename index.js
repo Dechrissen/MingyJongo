@@ -118,7 +118,7 @@ http.createServer((req, res) => {
 		authRequest(body);
 	}
 
-	if (urlObj.pathname === '/') {
+	if (urlObj.pathname === '/mingy-jongo-auth') {
 		responseCode = 200;
 		content = fs.readFileSync('./index.html');
 	}
