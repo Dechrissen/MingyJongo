@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<link rel="icon" type="image/png" href="/assets/images/mingy-icon.png" />
 	<title>MingyJongo OAuth2</title>
 </head>
 <body>
 	<div id="info">
 		<h1>MingyJongo OAuth2</h1>
 	</div>
-  <p style="display: inline;">Link your Twitch account for croissant access:</p> <a id="login" style="display: none;" href="https://discord.com/api/oauth2/authorize?client_id=822534331079327803&redirect_uri=https%3A%2F%2Fderekandersen.net%2Fmingy-jongo-auth&response_type=code&scope=identify%20connections">Authorize</a>
+  <p style="display: inline;">Link your Discord and Twitch accounts for Croissant access:</p> <a id="login" style="display: none;" href="https://discord.com/api/oauth2/authorize?client_id=822534331079327803&redirect_uri=https%3A%2F%2Fderekandersen.net%2Fmingy-jongo-auth&response_type=code&scope=identify%20connections">Authorize</a>
 	<script>
 	function generateRandomString() {
 		const rand = Math.floor(Math.random() * 10);

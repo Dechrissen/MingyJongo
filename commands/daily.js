@@ -7,7 +7,7 @@ class DailyCommand extends BaseCommand {
 		this.description = 'Rewards a random number of croissaints between 1 and 25 (once per day).';
 	}
 	execute(message, args) {
-		var query = { discord : message.author.tag };
+		var query = { discord : message.author.username };
 		this.dbo.collection("users").findOne(query, (err, result) => {
 			if (err) throw err;
 			try {
@@ -39,7 +39,7 @@ class DailyCommand extends BaseCommand {
 			}
 			catch (err) {
 				console.error(err);
-				message.channel.send("User " + message.author.tag + " not in database!");
+				message.channel.send("User " + message.author.tag + " not in database! Link your Discord and Twitch accounts here: https://derekandersen.net/mingy-jongo-auth");
 			}
 		})
 	}

@@ -12,12 +12,13 @@ var commandList = []; // for storing a list of command names
 const prefix = "!";
 
 const client = new Discord.Client();
+var dbo = null;
 
 var MongoClient = require('mongodb').MongoClient;
 var db_url = config.DB_URL;
 MongoClient.connect(db_url, { useUnifiedTopology: true }, function(err, db) {
 	if (err) throw err;
-	var dbo = db.db("derkscord");
+	dbo = db.db("derkscord");
 	setBotCommands(client, dbo);
 	// Shutdown handler to close db connection
 	require('shutdown-handler').on('exit', function() {
@@ -44,6 +45,8 @@ function setBotCommands (client, dbo) {
 // Event listeners
 client.once('ready', () => {
   console.log(`Ready! Logged in as ${client.user.tag}.`);
+	client.user.setActivity('with his Zap Stick');
+	derkscord_guild = client.guilds.cache.find(r => r.name === "Derkscord");
 });
 
 client.on("message", message => {
@@ -63,7 +66,7 @@ client.on("message", message => {
 		const replacer = new RegExp(search, 'g');
 		var stringOfCommands = listOfCommands.toString();
 		const new_stringOfCommands = stringOfCommands.replace("\\[|\\]", "").replace(replacer, " | ");
-		message.channel.send("**Available commands**: " + new_stringOfCommands);
+		message.channel.send("**Bot commands**: " + new_stringOfCommands);
 		// log user's command use in console
 		console.log(`${message.author.tag} in #${message.channel.name}: !commands`);
 		return;
@@ -97,6 +100,7 @@ client.login(config.BOT_TOKEN);
 
 
 
+
 // Webserver for OAuth2
 http.createServer((req, res) => {
 	let responseCode = 404;
@@ -121,12 +125,14 @@ http.createServer((req, res) => {
 	if (urlObj.pathname === '/mingy-jongo-auth') {
 		responseCode = 200;
 		content = fs.readFileSync('./index.html');
+	} else if (urlObj.pathname === '/') {
+		responseCode = 200;
+		content = fs.readFileSync('./success.html');
 	}
 
 	res.writeHead(responseCode, {
 		'content-type': 'text/html;charset=utf-8',
 	});
-
 	res.write(content);
 	res.end();
 })
@@ -158,7 +164,10 @@ async function getUsername (info) {
 	});
 	let userJson = await userRes.json();
 	const { username, discriminator } = userJson;
+	//const username_discriminator = username + '#' + discriminator;
 	console.log(`Username: ${username}#${discriminator}`);
+
+	return username;
 }
 
 // Gets a user's connected Twitch account
@@ -169,10 +178,13 @@ async function getAccounts (info) {
 		},
 	});
 	let userJson = await userRes.json();
+	let twitch_username = '';
 	var i;
 	for (i = 0; i < userJson.length; i++) {
 		if (userJson[i]["type"] == ["twitch"]) {
+			twitch_username = userJson[i]["name"];
 			console.log("Twitch: " + userJson[i]["name"]);
+			return twitch_username;
 		}
 	}
 }
@@ -182,11 +194,64 @@ async function authRequest(body) {
 	try {
 			let info = await getToken(body);
 			//await new Promise(r => setTimeout(r, 3000));
-			await getUsername(info);
+			let d_username = await getUsername(info);
 			//await new Promise(r => setTimeout(r, 3000));
-			await getAccounts(info);
+			let twitch_username = await getAccounts(info);
+			discordTwitchLinker(d_username, twitch_username, dbo);
 	}
 	catch (e) {
 			console.error(e);
 	}
+}
+
+// Links a user's Discord username with their Twitch username in the 'users' database
+async function discordTwitchLinker(discord, twitch, dbo) {
+	var success = true;
+	var query = { "twitch" : twitch };
+	dbo.collection("users").findOne(query, function(err, result) {
+		if (err) throw err;
+		// First check if there is already a Discord username associated with this Twitch account
+		if (result.discord != null) {
+			success = false;
+		}
+
+		// Only do the DB update if no Discord username is associated with this Twitch account
+		try {
+			if (success) {
+				var newValue = { $set: { discord: discord } };
+				dbo.collection("users").updateOne(query, newValue, (err, res) => {
+					if (err) throw err;
+					try {
+						console.log('Successfully linked Discord (' + discord + ') to Twitch (' + twitch + ')')
+					}
+					catch (err) {
+						console.error(err);
+					}
+				});
+			}
+
+			// DM the user with a success or failure message
+			derkscord_guild.members.fetch({ query: discord, limit: 1 }).then((m) => {
+				if(m == null || m.first() == null)  return null;
+				let user = m.first().user;
+				return user;
+			})
+			.then((user) => {
+				client.users.fetch(user.id).then((d_usr) => {
+					if (success) {
+						d_usr.send('**Success**: Your Discord and Twitch accounts have been linked in Derkscord. ✅');
+					}
+					else {
+						d_usr.send('**Failure**: There is already a Discord username linked to your Twitch account in Derkscord. ❌');
+					}
+				}).catch((e) => console.log(e))
+			})
+			.catch((e) => {
+				console.log(e);
+			});
+		}
+		catch (err) {
+			console.log("Twitch user " + twitch + " not in database!");
+		}
+	})
 }

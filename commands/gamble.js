@@ -25,7 +25,7 @@ class GambleCommand extends BaseCommand {
       return;
     }
 
-		var query = { discord : message.author.tag };
+		var query = { discord : message.author.username };
 		this.dbo.collection("users").findOne(query, (err, result) => {
 			if (err) throw err;
 			try {
@@ -72,7 +72,7 @@ class GambleCommand extends BaseCommand {
 			}
 			catch (err) {
 				console.error(err);
-				message.channel.send("User " + message.author.tag + " not in database!");
+				message.channel.send("User " + message.author.username + " not in database! Link your Discord and Twitch accounts here: https://derekandersen.net/mingy-jongo-auth");
 			}
 		})
 	}
