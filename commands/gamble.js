@@ -41,7 +41,7 @@ class GambleCommand extends BaseCommand {
 				}
 
 				if (updateCooldown) {
-          if (result.croissaints < wager) {
+          if (result.croissants < wager) {
             message.reply("Insufficient Croissants!");
             return;
           }
